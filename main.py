@@ -35,3 +35,4 @@ for i in results_actress:
 
     with open(file_name, "wb") as aaa:
         aaa.write(image)
+
