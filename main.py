@@ -1,80 +1,120 @@
 import requests
 import json
-from datetime import datetime
+import datetime
 
-res = requests.get(
-    'https://api.dmm.com/affiliate/v3/ActressSearch?api_id=pZKdCGmsWwwYMgckK1yX&affiliate_id=harapekoafi-999&gte_hip=95&sort=-birthday&hits=100&offset=1&output=json')
+affiliate_id = 'harapekoafi-999'
+api_id = 'pZKdCGmsWwwYMgckK1yX'
 
-# print(res.status_code)
-# print(res.text)
+search_category = 'gte_hip='
+search_string = '90'
+sort_order = '-'
+sort_category = 'birthday'
+hit = 100
+get_qty = 1000
 
-res_json = res.json()
-json_string = json.dumps(res_json, indent=4)
+image_saved_count = 0
+got_count = 0
 
-# 配列に格納
-print(json_string)
+# Offsetを繰り返し
+for number in range(1, get_qty, hit):
 
-# 配列に格納
-results_actress = res_json['result']['actress']
+    offset = number
+    res = requests.get(
+        f'https://api.dmm.com/affiliate/v3/ActressSearch?api_id={api_id}&affiliate_id={affiliate_id}'
+        f'&{search_category}{search_string}&sort={sort_order}{sort_category}&hits={str(hit)}&offset={str(offset)}&output=json')
 
-# 件数を取得
-results_actress_count = len(results_actress)
+    # JSON形式として格納
+    res_json = res.json()
+    json_string = json.dumps(res_json, indent=4)
 
-print('取得件数：' + str(results_actress_count))
+    # 配列に格納
+    results_actresses = res_json['result']['actress']
 
-savedCount = 0
-# 配列から取得
-for i in results_actress:
+    # 件数を取得
+    results_actress_count = len(results_actresses)
+    got_count = got_count + results_actress_count
 
-    if i['name'] is None:
+    print('取得件数：' + str(results_actress_count))
+    act_count = 0
+    # 配列から取得
+    for actress in results_actresses:
+
+        if actress['name'] is None:
+            actName = ''
+        else:
+            actName = actress['name']
+
+        if actress['birthday'] is None:
+            birDate = ''
+            age = ''
+        else:
+
+            # 今日
+            today = datetime.date.today()
+            today_year = today.year
+            today_month = today.month
+            today_day = today.day
+
+            # 誕生日
+            birthday_string = actress['birthday']
+            birthday_datetime = datetime.datetime.strptime(birthday_string, '%Y-%m-%d')
+
+            birthday_year = birthday_datetime.year
+            birthday_month = birthday_datetime.month
+            birthday_day = birthday_datetime.day
+
+            birDate = birthday_string
+
+            # 年齢を計算する
+            age = today_year - birthday_year
+            if today_month < birthday_month:
+                age -= 1
+            elif today_month == birthday_month:
+                if today_day < birthday_day:
+                    age -= 1
+
+        if actress['hip'] is None:
+            hipSize = ''
+        else:
+            hipSize = actress['hip']
+
+        if 'imageURL' in actress:
+            imageLink = actress['imageURL']['large']
+
+            # サムネイルを保存
+            file_name = "C:\\Users\\harap\\Pictures\\Camera Roll\\test\\" + actName + ".jpg"
+
+            response = requests.get(imageLink)
+            image = response.content
+
+            with open(file_name, "wb") as aaa:
+                aaa.write(image)
+                image_saved_count += 1
+
+        else:
+            imageLink = ''
+
+        if 'listURL' in actress:
+            videoLink = actress['listURL']['digital']
+        else:
+            videoLink = ''
+
+        print('女優名：' + actName, '誕生日：' + birDate, '年齢：' + str(age), 'ヒップサイズ：' + hipSize,
+              '画像：' + imageLink,
+              '動画：' + videoLink)
+
         actName = ''
-    else:
-        actName = i['name']
-
-    if i['birthday'] is None:
         birDate = ''
-    else:
-        # today = datetime.date.today()
-        birDate = i['birthday']
-        # bd = i['birthday']
-        # tdatetime = datetime.strptime(bd, '%Y-%m-%d')
-        # tdate = datetime.date(tdatetime.year, tdatetime.month, tdatetime.day)
-        # birthday = datetime.date(tdate)
-        # birDate= (int(today.strftime("%Y%m%d")) - int(birthday.strftime("%Y%m%d"))) // 10000
-
-    if i['hip'] is None:
+        age = ''
         hipSize = ''
-    else:
-        hipSize = i['hip']
-
-    if 'imageURL' in i:
-        imageLink = i['imageURL']['large']
-
-        # サムネイルを保存
-        file_name = "C:\\Users\\harap\\Pictures\\Camera Roll\\test\\" + actName + ".jpg"
-
-        response = requests.get(imageLink)
-        image = response.content
-
-        with open(file_name, "wb") as aaa:
-            aaa.write(image)
-            savedCount += 1
-
-    else:
         imageLink = ''
-
-    if 'listURL' in i:
-        videoLink = i['listURL']['digital']
-    else:
         videoLink = ''
 
-    print('女優名：' + actName, '誕生日：' + birDate, 'ヒップサイズ：' + hipSize, '画像：' + imageLink,
-          '動画：' + videoLink)
+        act_count += 1
 
-    actName = ''
-    birDate = ''
-    hipSize = ''
-    imageLink = ''
-    videoLink = ''
+    # 最終レコードだった場合、ループを抜ける
+    if len(results_actresses) != hit:
+        if act_count == len(results_actresses):
+            break
 
-print(str(savedCount) + '／' + str(results_actress_count) + 'の画像保存　処理が完了しました')
+print(str(image_saved_count) + '／' + str(got_count) + 'の画像保存処理が完了しました')
