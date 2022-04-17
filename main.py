@@ -81,15 +81,15 @@ for number in range(1, get_qty, hit):
         if 'imageURL' in actress:
             imageLink = actress['imageURL']['large']
 
-            # サムネイルを保存
-            file_name = "C:\\Users\\harap\\Pictures\\Camera Roll\\test\\" + actName + ".jpg"
+            # # サムネイルを保存
+            # file_name = "C:\\Users\\harap\\Pictures\\Camera Roll\\test\\" + actName + ".jpg"
 
-            response = requests.get(imageLink)
-            image = response.content
-
-            with open(file_name, "wb") as aaa:
-                aaa.write(image)
-                image_saved_count += 1
+            # response = requests.get(imageLink)
+            # image = response.content
+            #
+            # with open(file_name, "wb") as aaa:
+            #     aaa.write(image)
+            #     image_saved_count += 1
 
         else:
             imageLink = ''
